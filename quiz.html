@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aptitude Test</title>
+<style>
+body{font-family:Arial;background:#eef2ff;padding:30px;}
+.container{max-width:700px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px #aaa;}
+button{padding:10px 20px;background:#0f62fe;color:white;border:none;border-radius:6px;cursor:pointer;}
+.option{margin:8px 0;}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Engineering Aptitude Test</h2>
+<p id="qst"></p>
+<div id="opts"></div>
+<button id="nextBtn" onclick="nextQ()" style="display:none;">Next</button>
+</div>
+
+<script>
+let questions=[
+ {q:"Speed of 150km in 3 hours?", opts:["50","60","45","70"], ans:0},
+ {q:"Unit of capacitance?", opts:["Henry","Ohm","Farad","Weber"], ans:2},
+ {q:"Stress = ?", opts:["Force/Area","Area/Force","Mass*Area","Force*Mass"], ans:0},
+ {q:"Derivative of sin(x)?", opts:["cos(x)","-cos(x)","sin(x)","1"], ans:0},
+ {q:"Voltage drop of silicon diode?", opts:["0.7V","7V","1V","0V"], ans:0},
+ {q:"Flow is turbulent for Reynolds?", opts:[">4000","<2000",">100","<400"], ans:0},
+ {q:"Transformer 240 to 120 V ratio?", opts:["2:1","1:2","4:1","1:4"], ans:0},
+ {q:"Ohm's law formula?", opts:["V=IR","V=I/R","R=VI","I=VR"], ans:0},
+ {q:"Power formula?", opts:["VI","V/I","IR","I/R"], ans:0},
+ {q:"Moment of inertia of rod (center)?", opts:["1/12 mL²","1/3 mL²","1/2 mL²","mL"], ans:0}
+];
+
+let index=0, score=0, selected=false;
+loadQ();
+
+function loadQ(){
+ document.getElementById("qst").innerHTML=questions[index].q;
+ let opHtml="";
+ questions[index].opts.forEach((o,i)=>{
+     opHtml+=`<div class='option'>
+     <input type='radio' name='opt' value='${i}' onchange='optSelected(${i})'> ${o}</div>`;
+ });
+ document.getElementById("opts").innerHTML=opHtml;
+ document.getElementById("nextBtn").style.display="none";
+}
+
+function optSelected(i){
+ selected=true;
+ if(i==questions[index].ans) score++;
+ document.getElementById("nextBtn").style.display="inline-block";
+}
+
+function nextQ(){
+ if(!selected) return;
+ index++;
+ selected=false;
+ if(index<questions.length){
+   loadQ();
+ } else {
+   saveResult();
+ }
+}
+
+function saveResult(){
+ let name=localStorage.getItem("student-name") || "Unknown";
+ let roll=localStorage.getItem("student-roll") || "Unknown";
+ let email=localStorage.getItem("student-email") || "unknown@example.com";
+
+ let results=JSON.parse(localStorage.getItem("students-results")||"[]");
+
+ results.push({
+   name:name,
+   roll:roll,
+   email:email,
+   score:score,
+   total:questions.length,
+   date: new Date().toISOString()
+ });
+
+ localStorage.setItem("students-results",JSON.stringify(results));
+ alert("Test Completed!");
+ // optional: clear single-student keys
+ // localStorage.removeItem("student-name"); localStorage.removeItem("student-roll"); localStorage.removeItem("student-email");
+ window.location.href="student-login.html";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Login</title>
+<style>
+body{font-family:Arial;background:#f0faff;padding:40px;}
+.container{width:330px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 0 10px #bbb;}
+input{width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #888;}
+button{width:100%;padding:10px;background:#0f62fe;color:white;border:none;border-radius:6px;cursor:pointer;}
+small{color:#666}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Student Login</h2>
+
+<input type="text" id="name" placeholder="Student Name">
+<input type="text" id="roll" placeholder="Roll Number">
+<input type="email" id="email" placeholder="Email address">
+<small>We store this email with your score for admin view.</small>
+
+<button onclick="startTest()">Start Test</button>
+</div>
+
+<script>
+function isValidEmail(e){
+  return /\S+@\S+\.\S+/.test(e);
+}
+
+function startTest(){
+    let name=document.getElementById("name").value.trim();
+    let roll=document.getElementById("roll").value.trim();
+    let email=document.getElementById("email").value.trim();
+
+    if(!name || !roll || !email){
+        alert("Enter all details!");
+        return;
+    }
+
+    if(!isValidEmail(email)){
+      alert("Enter a valid email address.");
+      return;
+    }
+
+    localStorage.setItem("student-name",name);
+    localStorage.setItem("student-roll",roll);
+    localStorage.setItem("student-email",email);
+
+    window.location.href="quiz.html";
+}
+</script>
+</body>
+</html>

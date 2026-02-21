@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Elevare – Student Portal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f8e9;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      color: #2e7d32;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+    .logout-btn {
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #e53935;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .layout {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .card.profile {
+      flex: 1 1 320px;
+    }
+    .card.resume {
+      flex: 1 1 280px;
+    }
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #777;
+    }
+    .value {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #c8e6c9;
+      color: #1b5e20;
+      font-size: 11px;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+    .skills-wrap {
+      margin-top: 8px;
+    }
+    input[type="file"] {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 999px;
+      background: #2e7d32;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #1b5e20; }
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .status.success {
+      color: #1b5e20;
+    }
+    .status.muted {
+      color: #777;
+    }
+    a.resume-link {
+      font-size: 12px;
+      color: #1e88e5;
+      text-decoration: none;
+    }
+    a.resume-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Elevare – Student</h1>
+      <div class="subtitle">Your personalised dashboard</div>
+    </div>
+    <button class="logout-btn" id="btnLogout">Logout</button>
+  </header>
+
+  <div class="layout">
+    <div class="card profile">
+      <h3 style="margin-top:0;margin-bottom:10px;">Profile</h3>
+      <div id="profileContent"></div>
+    </div>
+
+    <div class="card resume">
+      <h3 style="margin-top:0;margin-bottom:10px;">Resume Upload</h3>
+      <p style="font-size:12px;color:#555;">
+        Upload your latest resume (PDF / DOC / DOCX).<br>
+        Admin can see your uploaded file in their dashboard.
+      </p>
+      <input type="file" id="fileResume" accept=".pdf,.doc,.docx,.rtf" />
+      <button id="btnUpload">Upload / Replace Resume</button>
+      <div id="resumeStatus" class="status muted"></div>
+    </div>
+  </div>
+
+  <script>
+    function ensureStudent() {
+      const role = localStorage.getItem("elevare_loggedInRole");
+      const usn = localStorage.getItem("elevare_loggedInUSN");
+      if (role !== "student" || !usn) {
+        alert("Please login as a student first.");
+        window.location.href = "login.html";
+      }
+      return usn;
+    }
+
+    const currentUSN = ensureStudent();
+
+    function loadStudents() {
+      const data = localStorage.getItem("students");
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveStudents(students) {
+      localStorage.setItem("students", JSON.stringify(students));
+    }
+
+    function renderProfile() {
+      const students = loadStudents();
+      const me = students.find(s => s.usn === currentUSN);
+      const container = document.getElementById("profileContent");
+
+      if (!me) {
+        container.innerHTML = "<p>Profile not found. Please contact admin.</p>";
+        return;
+      }
+
+      const skills = (me.skills || "").split(",").map(s => s.trim()).filter(Boolean);
+
+      container.innerHTML = `
+        <div class="label">Name</div>
+        <div class="value">${me.name || "-"}</div>
+
+        <div class="label">USN / UID</div>
+        <div class="value">${me.usn || "-"} &nbsp; • &nbsp; ${me.uid || "-"}</div>
+
+        <div class="label">Department &amp; Year</div>
+        <div class="value">${me.dept || "-"} &nbsp; • &nbsp; ${me.year || "-"}</div>
+
+        <div class="label">GPA</div>
+        <div class="value">${me.gpa || "-"}</div>
+
+        <div class="label">Contact</div>
+        <div class="value">${me.email || "-"}<br>${me.phone || "-"}</div>
+
+        <div class="label">Skills</div>
+        <div class="skills-wrap">
+          ${skills.length ? skills.map(s => `<span class="badge">${s}</span>`).join("") : "<span style='font-size:12px;color:#777;'>No skills added yet.</span>"}
+        </div>
+      `;
+
+      const status = document.getElementById("resumeStatus");
+      if (me.resumeData) {
+        status.className = "status success";
+        status.innerHTML = `
+          Resume on file: <strong>${me.resumeName || "Uploaded file"}</strong><br>
+          <a class="resume-link" href="${me.resumeData}" target="_blank">Open current resume</a>
+        `;
+      } else {
+        status.className = "status muted";
+        status.textContent = "No resume uploaded yet.";
+      }
+    }
+
+    document.getElementById("btnUpload").addEventListener("click", function() {
+      const fileInput = document.getElementById("fileResume");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please choose a file first.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result; // data:...;base64,...
+        const students = loadStudents();
+        const index = students.findIndex(s => s.usn === currentUSN);
+        if (index === -1) {
+          alert("Student record not found. Contact admin.");
+          return;
+        }
+        students[index].resumeName = file.name;
+        students[index].resumeData = base64;
+        saveStudents(students);
+        renderProfile();
+        alert("Resume uploaded successfully!");
+        fileInput.value = "";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      localStorage.removeItem("elevare_loggedInRole");
+      localStorage.removeItem("elevare_loggedInUSN");
+      window.location.href = "login.html";
+    });
+
+    // Initial profile load
+    renderProfile();
+  </script>
+</body>
+</html>
